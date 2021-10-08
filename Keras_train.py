@@ -82,7 +82,6 @@ class OxfordPets(keras.utils.Sequence):
         for j, path in enumerate(batch_target_img_paths):
             img = load_img(path, target_size=self.img_size, color_mode="grayscale")
             y[j] = np.expand_dims(img, 2)
-            # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
             y[j] -= 1
         return x, [y,y]
 
@@ -127,7 +126,7 @@ def get_model(img_size, num_classes):
     #10,10,512   ->  10,10,256
     conv3_1_up = layers.UpSampling2D(2)(conv3_1_up)
     #10,10,256   ->  20,20,256
-    conv3_1 = layers.Concatenate(axis=3)([temporary3_0,conv3_1_up])
+    conv3_1 = layers.Concatenate(axis=-1)([temporary3_0,conv3_1_up])
     #20,20,256+20,20,256 -> 20,20,512
     conv3_1 = layers.Conv2D(256,3,strides=1,padding="same",activation=keras.activations.relu)(conv3_1)
     #20,20,512   ->  20,20,256
@@ -136,7 +135,7 @@ def get_model(img_size, num_classes):
     #20,20,256   ->  20,20,128
     conv2_1_up = layers.UpSampling2D(2)(conv2_1_up)
     #20,20,128   ->  40,40,128
-    conv2_1 = layers.Concatenate(axis=3)([conv2_1_up,temporary2_0])
+    conv2_1 = layers.Concatenate(axis=-1)([conv2_1_up,temporary2_0])
     #40,40,128+40,40,128 -> 40,40,256
     conv2_1 = layers.Conv2D(128,3,strides=1,padding="same",activation=keras.activations.relu)(conv2_1)
     #40,40,256  -> 40,40,128
@@ -145,7 +144,7 @@ def get_model(img_size, num_classes):
     #20,20,256  -> 20,20,128
     conv2_2_up = layers.UpSampling2D(2)(conv2_2_up)
     #20,20,128  -> 40,40,128
-    conv2_2 = layers.Concatenate(axis=3)([temporary2_0,conv2_1,conv2_2_up])
+    conv2_2 = layers.Concatenate(axis=-1)([temporary2_0,conv2_1,conv2_2_up])
     #40,40,128 * 3  => 40,40,384
     conv2_2 = layers.Conv2D(128,3,strides=1,padding="same",activation=keras.activations.relu)(conv2_2)
     #40,40,384  -> 40,40,128
@@ -154,7 +153,7 @@ def get_model(img_size, num_classes):
     #40,40,128  -> 40,40,64
     conv1_1_up = layers.UpSampling2D(2)(conv1_1_up)
     #40,40,64   -> 80,80,64
-    conv1_1 = layers.Concatenate(axis=3)([temporary1_0,conv1_1_up])
+    conv1_1 = layers.Concatenate(axis=-1)([temporary1_0,conv1_1_up])
     #80,80,64 + 80,80,64 -> 80,80,128
     conv1_1 = layers.Conv2D(64,3,strides=1,padding="same",activation=keras.activations.relu)(conv1_1)
     #80,80,128  -> 80,80,64
@@ -163,7 +162,7 @@ def get_model(img_size, num_classes):
     #40,40,128  -> 40,40,64
     conv1_2_up = layers.UpSampling2D(2)(conv1_2_up)
     #40,40,64   -> 80,80,64
-    conv1_2 = layers.Concatenate(axis=3)([temporary1_0,conv1_1,conv1_2_up])
+    conv1_2 = layers.Concatenate(axis=-1)([temporary1_0,conv1_1,conv1_2_up])
     #80,80,64 * 3  -> 80,80,192
     conv1_2 = layers.Conv2D(64,3,strides=1,padding="same",activation=keras.activations.relu)(conv1_2)
     #80,80,192  -> 80,80,64
@@ -172,7 +171,7 @@ def get_model(img_size, num_classes):
     #80,80,64   -> 80,80,32
     conv0_1_up = layers.UpSampling2D(2)(conv0_1_up)
     #80,80,32   -> 160,160,32
-    conv0_1 = layers.Concatenate(axis=3)([temporary0_0,conv0_1_up])
+    conv0_1 = layers.Concatenate(axis=-1)([temporary0_0,conv0_1_up])
     #160,160,32 -> 160,160,64
     conv0_1 = layers.Conv2D(32,3,strides=1,padding="same",activation=keras.activations.relu)(conv0_1)
     #160,160,64 -> 160,160,32

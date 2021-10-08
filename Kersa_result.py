@@ -67,7 +67,7 @@ class OxfordPets(keras.utils.Sequence):
             y[j] = np.expand_dims(img, 2)
             # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
             y[j] -= 1
-        return x, y
+        return x, [y,y]
 
 
 
@@ -76,7 +76,7 @@ class OxfordPets(keras.utils.Sequence):
 keras.backend.clear_session()
 
 
-model_Res = keras.models.load_model('oxford_unetpp.h5')
+model = keras.models.load_model('oxford_unetpp.h5')
 
 
 
@@ -90,20 +90,24 @@ model_Res = keras.models.load_model('oxford_unetpp.h5')
 test_gen  = OxfordPets( batch_size, img_size, test_input_img_paths , test_target_img_paths)
 #
 # ResNet
-val_preds_Res = model_Res.predict(test_gen)
-loss_R,acc_R  = model_Res.evaluate(test_gen)
-print(str(loss_R)+'----'+str(acc_R))
+predict = model.predict(test_gen)
+loss,loss_1,loss_2,acc_1,acc_2  = model.evaluate(test_gen)
+print(str(loss_1)+'----'+str(acc_1))
+print(str(loss_2)+'----'+str(acc_2))
+
 
 
 
 def display_mask(i):
-    mask = np.argmax(val_preds_Res[i], axis=-1)
-
-    mask = np.expand_dims(mask, axis=-1)
+    mask_1 = np.argmax(predict[0][i], axis=-1)
+    mask_2 = np.argmax(predict[1][i], axis=-1)
+    mask_1 = np.expand_dims(mask_1, axis=-1)
+    mask_2 = np.expand_dims(mask_2,axis=-1)
     #     [160,160,1]
-    img = PIL.ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask))
+    img_1 = PIL.ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask_1))
+    img_2 = PIL.ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask_2))
     # display(img)
-    return img
+    return img_1,img_2
 
 
 
@@ -116,32 +120,35 @@ i = random.randint(0,len(test_input_img_paths)-1)
 def get_result(i):
     img1  = mpimg.imread(test_input_img_paths[i])
     img1_ = mpimg.imread(test_target_img_paths[i])
-    img1__ = display_mask(i)
+    img1__,img1___ = display_mask(i)
 
-    loss = loss_R
-    acc = acc_R
-    title = 'loss:' + str(loss)[0:5] + '  acc:' + str(acc)[0:5]
+
+    title = 'loss_1:' + str(loss_1)[0:5] + '  acc_1:' + str(acc_1)[0:5] +'\nloss_2:'+str(loss_2)[0:5] + '  acc_2:'+str(acc_2)[0:5]
     fname = 'static/result/' + str(i) + '.jpg'
 
 
     # plt.figure("Image") # 图像窗口名称
 
 
-    plt.subplot(1,3,1)
+    plt.subplot(2,2,1)
     plt.imshow(img1)
     plt.axis('off')
     plt.title('Input')
 
-    plt.subplot(1,3,2)
+    plt.subplot(2,2,2)
     plt.imshow(img1_)
     plt.axis('off')
     plt.title('Ground Truth')
 
-    plt.subplot(1,3,3)
+    plt.subplot(2,2,3)
     plt.imshow(img1__)
     plt.axis('off')
-    plt.title('Predict')
+    plt.title('Predict_1')
 
+    plt.subplot(2,2,4)
+    plt.imshow(img1___)
+    plt.axis('off')
+    plt.title('Predict_2')
 
     plt.suptitle(title, y=0.1)
     plt.savefig(fname=fname,figsize=[10,10])
